@@ -1,0 +1,85 @@
+name: Memento
+repo: https://github.com/NemeZZiZZ/opencode-memento
+tagline: Amnesia insurance for OpenCode
+description: |
+  Amnesia insurance for OpenCode: a zero-dependency plugin that injects your
+  project's Markdown memory index into session compaction, so
+  auto-summarization never forgets that long-term memory exists.
+
+  Memory lives as plain Markdown in its own tree,
+  `~/.config/opencode/memento/projects/<hash>/MEMORY.md`, where `<hash>` is
+  the first 16 hex chars of the SHA-256 of the project's canonical path.
+  The index (one line per fact file) is pushed into the compaction prompt;
+  individual fact files are read on demand after compaction.
+
+  Storage is separated by design: memento never touches
+  `~/.config/opencode/memory`, so it runs side by side with
+  @npv12/opencode-memory-md without sharing a single file — passive
+  guaranteed injection here, active semantic search there.
+scope:
+  - global
+  - project
+tags:
+  - memory
+  - compaction
+  - markdown
+  - context
+  - agent-memory
+min_version: "2.0.0"
+installation: |
+  ## Prerequisites
+  - OpenCode 2.0.0 or later
+  - Node.js 22+ (OpenCode runs the TypeScript source directly, there is no build step)
+
+  ## Install
+  Add to `opencode.json(c)` — straight from GitHub, no npm needed:
+
+  ```json
+  {
+    "plugins": ["opencode-memento@git+https://github.com/NemeZZiZZ/opencode-memento.git"]
+  }
+  ```
+
+  (The bare `"opencode-memento"` npm spec works only after `npm publish`;
+  the package is not on the registry yet. Verified on OpenCode 2.0.18:
+  the git spec loads with zero `failed to load plugin` lines in the log.)
+
+  ### Local checkout (hacking)
+  Skip the spec — OpenCode auto-loads anything in the plugins directory:
+
+  ```sh
+  cp src/index.ts ~/.config/opencode/plugins/memento.ts
+  ```
+
+  ## Memory setup
+  Create the per-project index at
+  `~/.config/opencode/memento/projects/<hash>/MEMORY.md`:
+
+  ```sh
+  PROJECT_DIR="$(pwd -P)"; printf '%s' "$PROJECT_DIR" | shasum -a 256 | cut -c1-16
+  # Linux: use sha256sum instead of shasum
+  ```
+
+  List fact files in the index, one line each.
+
+  ## Configuration
+  All options are optional:
+
+  ```json
+  {
+    "plugins": [
+      {
+        "package": "opencode-memento@git+https://github.com/NemeZZiZZ/opencode-memento.git",
+        "options": {
+          "memoryRoot": "~/.config/opencode/memento/projects",
+          "indexFile": "MEMORY.md"
+        }
+      }
+    ]
+  }
+  ```
+
+  | Option | Default | Meaning |
+  | --- | --- | --- |
+  | `memoryRoot` | `~/.config/opencode/memento/projects` | Per-project memory folders; or `MEMENTO_MEMORY_ROOT` env |
+  | `indexFile` | `MEMORY.md` | Index file name; or `MEMENTO_INDEX_FILE` env |
